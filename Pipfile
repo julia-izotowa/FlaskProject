@@ -8,6 +8,7 @@ flask = "*"
 requests = "*"
 faker = "*"
 jupyter = "*"
+json2html = "*"
 
 [dev-packages]
 pytest = "*"
