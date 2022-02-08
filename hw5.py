@@ -1,16 +1,17 @@
 
 import csv
 import json
+import string
+
 import requests
 import main
 
 from json2html import *
 
 from faker import Faker
+from flask import abort, Flask, jsonify, Response
 
-from flask import Flask, request, jsonify, Response
-
-
+from http import HTTPStatus
 from webargs import validate, fields
 from webargs.flaskparser import use_kwargs
 
@@ -18,37 +19,70 @@ from webargs.flaskparser import use_kwargs
 app = Flask(__name__)
 
 
+@app.errorhandler(HTTPStatus.UNPROCESSABLE_ENTITY)
+@app.errorhandler(HTTPStatus.BAD_REQUEST)
+def error_handling(error):
+    headers = error.data.get("headers", None)
+    messages = error.data.get("messages", ["Invalid request."])
+
+    if headers:
+        return jsonify(
+            {
+                'errors': messages
+            },
+            error.code,
+            headers
+        )
+    else:
+        return jsonify(
+            {
+                'errors': messages
+            },
+            error.code,
+        )
+
+
 @app.route("/")
 def hello_world():
     return "<p>Hello, Mykhailo!</p>"
 
+
 @app.route('/bitcoin-rate')
-def get_bitcoin_value():
+@use_kwargs(
+    {
+        "currency": fields.Str(
+            missing="USD",
+            validate=[validate.Length(equal=3),
+                      validate.ContainsOnly(string.ascii_uppercase)]
+        ),
+    },
+    location="query")
+def get_bitcoin_value(currency):
 
-    currency_name = request.args.get('currency', 'USD')
-    if currency_name.isdigit():
-        return Response("ERROR: Wrong symbols in currency name")
+    currency_value = bitcoin_exchange_value(currency)
+    currency_sign = get_currency_sign(currency)
 
-    currency_value = bitcoin_exchange_value(currency_name)
-    currency_sign = get_currency_sign(currency_name)
-
-    return ''.join(f'Currency exchange rate BTC to {currency_name}: {currency_value}  {currency_sign}')
+    return ''.join(f'Currency exchange rate BTC to {currency}: {currency_value}  {currency_sign}')
 
 
 def bitcoin_exchange_value(currency_name):
 
-    currency_value = requests.get(f"https://bitpay.com/api/rates/{currency_name}")
-    result = currency_value.json()
+    result = requests.get(f"https://bitpay.com/api/rates/{currency_name}")
+    if result.status_code != HTTPStatus.OK:
+        abort(Response("ERROR: Something went wrong", status=result.status_code))
 
-    return result["rate"]
+    currency_data = result.json()
+    return currency_data["rate"]
 
 
 def get_currency_sign(currency_name):
 
-    request_data = requests.get("https://bitpay.com/currencies")
-    result = request_data.json()["data"]
-    currency_data = list(filter(lambda x: x['code'] == currency_name, result))
+    result = requests.get("https://bitpay.com/currencies")
+    if result.status_code != HTTPStatus.OK:
+        abort(Response("ERROR: Something went wrong", status=result.status_code))
 
+    request_data = result.json()["data"]
+    currency_data = list(filter(lambda x: x['code'] == currency_name, request_data))
     return currency_data[0]['symbol']
 
 
@@ -72,7 +106,7 @@ def generate_students(number):
                                  "password": main.generate_password(),
                                  "birthday": str(fake.date_of_birth(minimum_age=17, maximum_age=25))})
 
-    with open('students_demo.csv', "w", newline="") as file:
+    with open('students_demo.csv', "w", newline="", encoding='utf-8') as file:
         columns = list_of_students[0].keys()
         writer = csv.DictWriter(file, fieldnames=columns)
         writer.writeheader()
