@@ -106,7 +106,7 @@ def generate_students(number):
                                  "password": main.generate_password(),
                                  "birthday": str(fake.date_of_birth(minimum_age=17, maximum_age=25))})
 
-    with open('students_demo.csv', "w", newline="") as file:
+    with open('students_demo.csv', "w", newline="", encoding='utf-8') as file:
         columns = list_of_students[0].keys()
         writer = csv.DictWriter(file, fieldnames=columns)
         writer.writeheader()
