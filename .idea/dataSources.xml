@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
-    <data-source source="LOCAL" name="chinook.db" uuid="2d67e862-84fd-4074-8392-d0d8809457fd">
+    <data-source source="LOCAL" name="chinook.db" uuid="b96113fa-9c93-48df-87bd-4a934b5ff9e9">
       <driver-ref>sqlite.xerial</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>org.sqlite.JDBC</jdbc-driver>

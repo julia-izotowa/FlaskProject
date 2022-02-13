@@ -4,7 +4,6 @@ import json
 import string
 
 import requests
-import main
 
 from json2html import *
 
@@ -15,31 +14,16 @@ from http import HTTPStatus
 from webargs import validate, fields
 from webargs.flaskparser import use_kwargs
 
+from error_handler import error_handling
+
 
 app = Flask(__name__)
 
 
 @app.errorhandler(HTTPStatus.UNPROCESSABLE_ENTITY)
 @app.errorhandler(HTTPStatus.BAD_REQUEST)
-def error_handling(error):
-    headers = error.data.get("headers", None)
-    messages = error.data.get("messages", ["Invalid request."])
-
-    if headers:
-        return jsonify(
-            {
-                'errors': messages
-            },
-            error.code,
-            headers
-        )
-    else:
-        return jsonify(
-            {
-                'errors': messages
-            },
-            error.code,
-        )
+def error_handler(error):
+    return error_handling(error)
 
 
 @app.route("/")
@@ -103,7 +87,7 @@ def generate_students(number):
         list_of_students.append({"first_name": fake.first_name().replace("ʼ", "'"),
                                  "last_name": fake.last_name().replace("ʼ", "'"),
                                  "email": fake.email(),
-                                 "password": main.generate_password(),
+                                 "password": "",
                                  "birthday": str(fake.date_of_birth(minimum_age=17, maximum_age=25))})
 
     with open('students_demo.csv', "w", newline="", encoding='utf-8') as file:
@@ -115,4 +99,4 @@ def generate_students(number):
     return json2html.convert(json.dumps(list_of_students, ensure_ascii=False))
 
 
-app.run(port=4567, debug=True)
+app.run(port=5005, debug=True)
