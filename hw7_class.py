@@ -14,7 +14,7 @@ class Circle:
         self.radius = radius
 
     def contains(self, point: Point) -> bool:
-        return pow(self.x - point.x, 2) + pow(self.y - point.y, 2) <= self.radius
+        return pow(point.x - self.x, 2) + pow(point.y - self.y, 2) <= pow(self.radius, 2)
 
 
 def main():
