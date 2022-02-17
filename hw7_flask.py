@@ -41,19 +41,20 @@ def stats_by_genre(genre):
 
     query = f'''
             SELECT i.BillingCity AS City,
-                    g.Name AS Genre,
-                COUNT(i.InvoiceId) AS CountListeners
+                   g.Name AS Genre,
+                   COUNT(i.InvoiceId) AS CountListeners
             FROM genres g
                      left join tracks t on g.GenreId = t.GenreId
                      left join invoice_items ii on t.TrackId = ii.TrackId
                      inner join invoices i on ii.InvoiceId = i.InvoiceId
-            WHERE g.Name LIKE '%{genre}%'
+            WHERE g.Name LIKE ?
             GROUP BY g.Name, i.BillingCity
             ORDER BY CountListeners DESC
             LIMIT 1
           '''
 
-    records = execute_query(query=query)
+    records = execute_query(query=query, args=(genre,))
+
     if len(records) == 0:
         abort(Response("No data for your request..."))
 
